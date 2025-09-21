@@ -12,7 +12,6 @@ import { NouveauPaiementPage } from './pages/paiements/NouveauPaiementPage';
 import { ActionsRapidesPage } from './pages/ActionsRapidesPage';
 import { isAuthenticated } from './services/auth';
 import { initializeDatabase } from './services/database';
-import { cleanupOldDemoCodes } from './services/auth';
 
 // Composant pour les routes protégées
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -25,14 +24,6 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     };
     checkAuth();
   }, []);
-  const App: React.FC = () => {
-  useEffect(() => {
-    console.log('App mounted');
-  }, []);
-
-  return <div>Bonjour</div>;
-};
-
 
   if (isAuth === null) {
     return (
@@ -47,10 +38,6 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   return isAuth ? <>{children}</> : <Navigate to="/login" />;
 };
-useEffect(() => {
-  // -> supprime définitivement les anciens codes de test de toutes les bases clients
-  cleanupOldDemoCodes();
-}, []);
 
 // Layout principal avec navigation
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
