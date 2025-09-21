@@ -1,3 +1,6 @@
+// ========================
+// src/services/auth.ts
+// ========================
 import { db } from './database';
 import { User, AccessCode } from '../types';
 
@@ -37,11 +40,11 @@ export const authenticateWithCode = async (code: string): Promise<boolean> => {
   try {
     const fingerprint = generateBrowserFingerprint();
 
-    // Vérifier si déjà authentifié
+    // Déjà authentifié
     const existingUser = await db.users.where('browserFingerprint').equals(fingerprint).first();
     if (existingUser) return true;
 
-    // Vérifier le code
+    // Vérifie code
     const accessCode = await db.accessCodes.where('code').equals(code).first();
     if (!accessCode || accessCode.isUsed) return false;
 
@@ -52,7 +55,7 @@ export const authenticateWithCode = async (code: string): Promise<boolean> => {
       usedAt: new Date()
     });
 
-    // Créer l'utilisateur
+    // Crée l'utilisateur
     await db.users.add({
       id: Date.now().toString(),
       code,
@@ -67,10 +70,10 @@ export const authenticateWithCode = async (code: string): Promise<boolean> => {
   }
 };
 
-// Vérifie si le code est le code admin
+// Vérifie si le code est admin
 export const isAdminCode = (code: string): boolean => code === MASTER_CODE;
 
-// Création d'un nouveau code d'accès (admin seulement)
+// Crée un nouveau code d'accès
 export const createAccessCode = async (code: string): Promise<boolean> => {
   try {
     const existing = await db.accessCodes.where('code').equals(code).first();
@@ -82,6 +85,7 @@ export const createAccessCode = async (code: string): Promise<boolean> => {
       isUsed: false,
       createdAt: new Date()
     });
+
     return true;
   } catch {
     return false;
@@ -111,7 +115,7 @@ export const cleanupOldDemoCodes = async (): Promise<void> => {
   }
 };
 
-// Génère un code d'accès aléatoire
+// Génère un code aléatoire
 export const generateRandomCode = (length = 8): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
@@ -120,3 +124,19 @@ export const generateRandomCode = (length = 8): string => {
   }
   return code;
 };
+
+// Initialisation admin si inexistant
+export const ensureAdminCode = async (): Promise<void> => {
+  const existing = await db.accessCodes.where('code').equals(MASTER_CODE).first();
+  if (!existing) {
+    await db.accessCodes.add({
+      id: Date.now().toString(),
+      code: MASTER_CODE,
+      isUsed: false,
+      createdAt: new Date()
+    });
+  }
+};
+ts
+Copier le code
+// ========================
