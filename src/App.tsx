@@ -25,6 +25,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     };
     checkAuth();
   }, []);
+  const App: React.FC = () => {
+  useEffect(() => {
+    console.log('App mounted');
+  }, []);
+
+  return <div>Bonjour</div>;
+};
+
 
   if (isAuth === null) {
     return (
