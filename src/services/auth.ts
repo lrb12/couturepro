@@ -1,20 +1,15 @@
-// ========================
-// src/services/auth.ts
-// ========================
 import { db } from './database';
 import { User, AccessCode } from '../types';
 
 const MASTER_CODE = 'ADMIN2024';
-const DEMO_PREFIX = 'DEMO';
 
-// Génère l'empreinte unique du navigateur
 export const generateBrowserFingerprint = (): string => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   ctx!.textBaseline = 'top';
   ctx!.font = '14px Arial';
   ctx!.fillText('Browser fingerprint', 2, 2);
-
+  
   return btoa(JSON.stringify({
     screen: `${screen.width}x${screen.height}`,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -24,7 +19,6 @@ export const generateBrowserFingerprint = (): string => {
   }));
 };
 
-// Vérifie si l'utilisateur est déjà authentifié
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
     const fingerprint = generateBrowserFingerprint();
@@ -35,16 +29,15 @@ export const isAuthenticated = async (): Promise<boolean> => {
   }
 };
 
-// Authentification avec code d'accès
 export const authenticateWithCode = async (code: string): Promise<boolean> => {
   try {
     const fingerprint = generateBrowserFingerprint();
-
-    // Déjà authentifié
+    
+    // Vérifier si déjà authentifié
     const existingUser = await db.users.where('browserFingerprint').equals(fingerprint).first();
     if (existingUser) return true;
 
-    // Vérifie code
+    // Vérifier le code
     const accessCode = await db.accessCodes.where('code').equals(code).first();
     if (!accessCode || accessCode.isUsed) return false;
 
@@ -55,7 +48,7 @@ export const authenticateWithCode = async (code: string): Promise<boolean> => {
       usedAt: new Date()
     });
 
-    // Crée l'utilisateur
+    // Créer l'utilisateur
     await db.users.add({
       id: Date.now().toString(),
       code,
@@ -70,10 +63,10 @@ export const authenticateWithCode = async (code: string): Promise<boolean> => {
   }
 };
 
-// Vérifie si le code est admin
-export const isAdminCode = (code: string): boolean => code === MASTER_CODE;
+export const isAdminCode = (code: string): boolean => {
+  return code === MASTER_CODE;
+};
 
-// Crée un nouveau code d'accès
 export const createAccessCode = async (code: string): Promise<boolean> => {
   try {
     const existing = await db.accessCodes.where('code').equals(code).first();
@@ -92,51 +85,11 @@ export const createAccessCode = async (code: string): Promise<boolean> => {
   }
 };
 
-// Récupère tous les codes d'accès
 export const getAllAccessCodes = async (): Promise<AccessCode[]> => {
   return await db.accessCodes.orderBy('createdAt').reverse().toArray();
 };
 
-// Déconnexion
 export const logout = async (): Promise<void> => {
   const fingerprint = generateBrowserFingerprint();
   await db.users.where('browserFingerprint').equals(fingerprint).delete();
 };
-
-// Supprime les anciens codes DEMO
-export const cleanupOldDemoCodes = async (): Promise<void> => {
-  try {
-    const demoCodes = await db.accessCodes.filter(c => c.code.startsWith(DEMO_PREFIX)).toArray();
-    for (const code of demoCodes) {
-      await db.accessCodes.delete(code.id);
-    }
-  } catch (error) {
-    console.error('Erreur suppression anciens codes DEMO:', error);
-  }
-};
-
-// Génère un code aléatoire
-export const generateRandomCode = (length = 8): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < length; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-};
-
-// Initialisation admin si inexistant
-export const ensureAdminCode = async (): Promise<void> => {
-  const existing = await db.accessCodes.where('code').equals(MASTER_CODE).first();
-  if (!existing) {
-    await db.accessCodes.add({
-      id: Date.now().toString(),
-      code: MASTER_CODE,
-      isUsed: false,
-      createdAt: new Date()
-    });
-  }
-};
-ts
-Copier le code
-// ========================
