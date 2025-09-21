@@ -40,6 +40,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   return isAuth ? <>{children}</> : <Navigate to="/login" />;
 };
+useEffect(() => {
+  // -> supprime définitivement les anciens codes de test de toutes les bases clients
+  cleanupOldDemoCodes();
+}, []);
 
 // Layout principal avec navigation
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
