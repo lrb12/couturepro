@@ -12,6 +12,8 @@ import { NouveauPaiementPage } from './pages/paiements/NouveauPaiementPage';
 import { ActionsRapidesPage } from './pages/ActionsRapidesPage';
 import { isAuthenticated } from './services/auth';
 import { initializeDatabase } from './services/database';
+import { useEffect } from 'react';
+import { cleanupOldDemoCodes } from './services/auth';
 
 // Composant pour les routes protégées
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
