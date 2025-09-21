@@ -1,124 +1,64 @@
-// src/services/auth.ts
 import { db } from './database';
 import { User, AccessCode } from '../types';
 
-/**
- * Code super-admin (uniquement pour accéder à /admin-secret).
- * Garde-le secret et change-le si besoin.
- */
 const MASTER_CODE = 'ADMIN2024';
+const DEMO_PREFIX = 'DEMO';
 
-/**
- * Liste des anciens codes de démo / test à bloquer définitivement.
- * Ajoute ici tous les codes que tu veux interdire (ex: 'DEMO2024', 'TEST001', ...).
- */
-const BLACKLISTED_CODES = ['DEMO2024', 'TEST001'];
-
-/**
- * Générer une empreinte simple du navigateur (pour lier un accès au navigateur).
- * Ne garantit pas l'unicité parfaite, mais suffit pour le flow "code à usage unique lié au navigateur".
- */
+// Génère l'empreinte unique du navigateur
 export const generateBrowserFingerprint = (): string => {
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx!.textBaseline = 'top';
-    ctx!.font = '14px Arial';
-    ctx!.fillText('Browser fingerprint', 2, 2);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx!.textBaseline = 'top';
+  ctx!.font = '14px Arial';
+  ctx!.fillText('Browser fingerprint', 2, 2);
 
-    const data = {
-      screen: `${screen.width}x${screen.height}`,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      language: navigator.language,
-      platform: navigator.platform,
-      canvas: canvas.toDataURL()
-    };
-
-    return btoa(JSON.stringify(data));
-  } catch (e) {
-    // Fallback simple si l'environnement bloque canvas
-    return btoa(JSON.stringify({
-      screen: `${screen.width}x${screen.height}`,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      language: navigator.language,
-      platform: navigator.platform
-    }));
-  }
+  return btoa(JSON.stringify({
+    screen: `${screen.width}x${screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    language: navigator.language,
+    platform: navigator.platform,
+    canvas: canvas.toDataURL()
+  }));
 };
 
-/**
- * Vérifie si l'utilisateur (par empreinte) est déjà authentifié.
- */
+// Vérifie si l'utilisateur est déjà authentifié
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
     const fingerprint = generateBrowserFingerprint();
     const user = await db.users.where('browserFingerprint').equals(fingerprint).first();
     return !!user;
-  } catch (error) {
-    console.error('isAuthenticated error:', error);
+  } catch {
     return false;
   }
 };
 
-/**
- * Authentification avec code d'accès.
- * - Bloque définitivement les codes en blacklist.
- * - Autorise le MASTER_CODE (admin) à se connecter (sans consommer d'accessCode).
- * - Pour les codes utilisateurs : vérifie existence + isUsed, marque isUsed, crée une session utilisateur liée à l'empreinte.
- */
+// Authentification avec code d'accès
 export const authenticateWithCode = async (code: string): Promise<boolean> => {
   try {
-    // Normalisation minimale
-    const trimmed = (code || '').toString().trim();
-
-    // Refuser immédiatement les codes blacklistés
-    if (BLACKLISTED_CODES.includes(trimmed)) {
-      console.warn(`Tentative d'utilisation d'un code blacklisté: ${trimmed}`);
-      return false;
-    }
-
     const fingerprint = generateBrowserFingerprint();
 
-    // Si la même empreinte a déjà une session utilisateur, considérer comme authentifié
+    // Vérifier si déjà authentifié
     const existingUser = await db.users.where('browserFingerprint').equals(fingerprint).first();
     if (existingUser) return true;
 
-    // Si c'est le MASTER_CODE, autoriser (admin)
-    if (isAdminCode(trimmed)) {
-      await db.users.add({
-        id: Date.now().toString(),
-        code: trimmed,
-        usedAt: new Date(),
-        browserFingerprint: fingerprint,
-        isAdmin: true
-      } as User);
-      return true;
-    }
+    // Vérifier le code
+    const accessCode = await db.accessCodes.where('code').equals(code).first();
+    if (!accessCode || accessCode.isUsed) return false;
 
-    // Sinon vérifier la présence du code dans accessCodes
-    const accessCode = await db.accessCodes.where('code').equals(trimmed).first();
-    if (!accessCode) {
-      // pour sécurité, on peut aussi supprimer les codes blacklistés de la DB mais on ne le fait pas ici
-      return false;
-    }
-
-    // Si déjà utilisé => refus
-    if (accessCode.isUsed) return false;
-
-    // Marquer le code comme utilisé et enregistrer la session utilisateur
+    // Marquer le code comme utilisé
     await db.accessCodes.update(accessCode.id, {
       isUsed: true,
       usedBy: fingerprint,
       usedAt: new Date()
     });
 
+    // Créer l'utilisateur
     await db.users.add({
       id: Date.now().toString(),
-      code: trimmed,
+      code,
       usedAt: new Date(),
-      browserFingerprint: fingerprint,
-      isAdmin: false
-    } as User);
+      browserFingerprint: fingerprint
+    });
 
     return true;
   } catch (error) {
@@ -127,96 +67,56 @@ export const authenticateWithCode = async (code: string): Promise<boolean> => {
   }
 };
 
-/**
- * Vérifie (localement) si un code est le MASTER admin.
- * (Pas asynchrone — on compare la constante).
- */
-export const isAdminCode = (code: string): boolean => {
-  return (code || '').toString().trim() === MASTER_CODE;
-};
+// Vérifie si le code est le code admin
+export const isAdminCode = (code: string): boolean => code === MASTER_CODE;
 
-/**
- * Création d'un code d'accès (réservé à l'admin).
- * Renvoie false si le code existe déjà ou si erreur.
- */
+// Création d'un nouveau code d'accès (admin seulement)
 export const createAccessCode = async (code: string): Promise<boolean> => {
   try {
-    const trimmed = (code || '').toString().trim();
-    if (!trimmed) return false;
-
-    // Empêcher la création d'un code blacklisté
-    if (BLACKLISTED_CODES.includes(trimmed)) {
-      console.warn('Tentative de création d\'un code blacklisté:', trimmed);
-      return false;
-    }
-
-    const existing = await db.accessCodes.where('code').equals(trimmed).first();
+    const existing = await db.accessCodes.where('code').equals(code).first();
     if (existing) return false;
 
     await db.accessCodes.add({
       id: Date.now().toString(),
-      code: trimmed,
+      code,
       isUsed: false,
       createdAt: new Date()
-    } as AccessCode);
-
+    });
     return true;
-  } catch (error) {
-    console.error('createAccessCode error:', error);
+  } catch {
     return false;
   }
 };
 
-/**
- * Retourne tous les codes (ordre inverse de création).
- */
+// Récupère tous les codes d'accès
 export const getAllAccessCodes = async (): Promise<AccessCode[]> => {
-  try {
-    return await db.accessCodes.orderBy('createdAt').reverse().toArray();
-  } catch (error) {
-    console.error('getAllAccessCodes error:', error);
-    return [];
-  }
+  return await db.accessCodes.orderBy('createdAt').reverse().toArray();
 };
 
-/**
- * Déconnexion : supprime la session utilisateur liée à l'empreinte.
- */
+// Déconnexion
 export const logout = async (): Promise<void> => {
-  try {
-    const fingerprint = generateBrowserFingerprint();
-    await db.users.where('browserFingerprint').equals(fingerprint).delete();
-  } catch (error) {
-    console.error('logout error:', error);
-  }
+  const fingerprint = generateBrowserFingerprint();
+  await db.users.where('browserFingerprint').equals(fingerprint).delete();
 };
 
-/**
- * Supprime définitivement les anciens codes de démo/tests de la DB
- * (DEMO2024, TEST001, etc.). Appelle cette fonction au démarrage si tu veux purger
- * automatiquement tous les anciens codes — utile pour forcer la disparition.
- */
+// Supprime les anciens codes DEMO
 export const cleanupOldDemoCodes = async (): Promise<void> => {
   try {
-    for (const bad of BLACKLISTED_CODES) {
-      try {
-        // supprimer toutes les entrées correspondantes
-        await db.accessCodes.where('code').equals(bad).delete();
-      } catch (inner) {
-        console.warn('Erreur suppression code blacklisté', bad, inner);
-      }
+    const demoCodes = await db.accessCodes.filter(c => c.code.startsWith(DEMO_PREFIX)).toArray();
+    for (const code of demoCodes) {
+      await db.accessCodes.delete(code.id);
     }
-
-    // Optionnel : on peut aussi supprimer les sessions utilisateurs créées avec ces codes
-    // (par exemple, s'il existe des users dont user.code est DEMO2024)
-    try {
-      await db.users.where('code').anyOf(BLACKLISTED_CODES).delete();
-    } catch (inner) {
-      console.warn('Erreur suppression users liés aux codes blacklistés', inner);
-    }
-
-    console.info('cleanupOldDemoCodes: suppression terminée');
   } catch (error) {
-    console.error('cleanupOldDemoCodes error:', error);
+    console.error('Erreur suppression anciens codes DEMO:', error);
   }
+};
+
+// Génère un code d'accès aléatoire
+export const generateRandomCode = (length = 8): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 };
