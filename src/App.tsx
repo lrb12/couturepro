@@ -15,7 +15,6 @@ import { initializeDatabase } from './services/database';
 import { useSettings } from './hooks/useSettings';
 import { ErrorBoundary } from './components/utils/ErrorBoundary';
 
-
 // Composant pour les routes protégées
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuth, setIsAuth] = useState<boolean | null>(null);
@@ -63,10 +62,8 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 function App() {
   useEffect(() => {
-    // Initialiser la base de données
     initializeDatabase();
 
-    // Enregistrer le service worker pour la PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -77,134 +74,112 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <Routes>
-        {/* Route de connexion */}
-        <Route path="/login" element={<LoginPage />} />
-
-        {/* Route admin secrète */}
-        <Route 
-          path="/admin-secret" 
-          element={
-            <ProtectedRoute>
-              <AdminPage />
-            </ProtectedRoute>
-          } 
-        />
-
-        function App() {
-  return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <Router>
         <Routes>
-          {/* tes routes ici */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/admin-secret"
+            element={
+              <ProtectedRoute>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <DashboardPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clients"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ClientsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/commandes"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <CommandesPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/alertes"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <AlertsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/parametres"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <SettingsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clients/nouveau"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ClientsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/commandes/nouvelle"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <CommandesPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/paiements/nouveau"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <NouveauPaiementPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/actions"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ActionsRapidesPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </BrowserRouter>
+      </Router>
     </ErrorBoundary>
-  );
-}
-
-
-        {/* Dashboard */}
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <DashboardPage />
-              </MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Pages existantes */}
-        <Route 
-          path="/clients" 
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <ClientsPage />
-              </MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/commandes" 
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <CommandesPage />
-              </MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/alertes" 
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <AlertsPage />
-              </MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/parametres" 
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <SettingsPage />
-              </MainLayout>
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Routes CTA */}
-        <Route 
-          path="/clients/nouveau"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <ClientsPage />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/commandes/nouvelle"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <CommandesPage />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/paiements/nouveau"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <NouveauPaiementPage />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route 
-          path="/actions"
-          element={
-            <ProtectedRoute>
-              <MainLayout>
-                <ActionsRapidesPage />
-              </MainLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirection par défaut */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
   );
 }
 
