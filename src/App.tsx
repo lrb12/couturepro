@@ -92,6 +92,19 @@ function App() {
           } 
         />
 
+        function App() {
+  return (
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          {/* tes routes ici */}
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
+  );
+}
+
+
         {/* Dashboard */}
         <Route 
           path="/" 
