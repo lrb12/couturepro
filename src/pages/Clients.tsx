@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Search, UserPlus, Phone, Mail, MapPin, Ruler, History, FileText, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Search, UserPlus, Phone, Mail, MapPin,
+  Ruler, FileText, User
+} from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { Card } from '../components/ui/Card';
@@ -16,7 +19,6 @@ export const ClientsPage: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewClientModal, setShowNewClientModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const loadClients = async () => {
@@ -40,9 +42,8 @@ export const ClientsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Clients" showLogo={false} />
-      
+
       <main className="p-4 pb-20">
-        {/* Barre de recherche et actions */}
         <div className="mb-6">
           <div className="relative mb-4">
             <Search className="absolute left-3 top-3 text-gray-400" size={20} />
@@ -54,7 +55,7 @@ export const ClientsPage: React.FC = () => {
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
             />
           </div>
-          
+
           <Button
             onClick={() => setShowNewClientModal(true)}
             fullWidth
@@ -65,16 +66,11 @@ export const ClientsPage: React.FC = () => {
           </Button>
         </div>
 
-        {/* Liste des clients */}
         <div className="space-y-3">
           {filteredClients.map(client => (
-            <ClientCard 
-              key={client.id} 
-              client={client} 
-              onUpdate={loadClients}
-            />
+            <ClientCard key={client.id} client={client} onUpdate={loadClients} />
           ))}
-          
+
           {filteredClients.length === 0 && (
             <Card className="text-center py-12 rounded-xl">
               <User className="mx-auto text-gray-300 mb-4" size={48} />
@@ -106,7 +102,6 @@ export const ClientsPage: React.FC = () => {
   );
 };
 
-// Composant carte client
 const ClientCard: React.FC<{ client: Client; onUpdate: () => void }> = ({ client, onUpdate }) => {
   const [showDetails, setShowDetails] = useState(false);
   const navigate = useNavigate();
@@ -132,7 +127,7 @@ const ClientCard: React.FC<{ client: Client; onUpdate: () => void }> = ({ client
           </div>
           <div className="text-right text-sm text-gray-500">
             <p>Ajouté le</p>
-            <p>{client.dateCreation.toLocaleDateString('fr-FR')}</p>
+            <p>{new Date(client.dateCreation).toLocaleDateString('fr-FR')}</p>
           </div>
         </div>
       </Card>
@@ -147,7 +142,6 @@ const ClientCard: React.FC<{ client: Client; onUpdate: () => void }> = ({ client
   );
 };
 
-// Modal détails client
 const ClientDetailsModal: React.FC<{
   client: Client;
   isOpen: boolean;
@@ -161,9 +155,7 @@ const ClientDetailsModal: React.FC<{
   const [selectedMesure, setSelectedMesure] = useState<Mesure | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      loadClientData();
-    }
+    if (isOpen) loadClientData();
   }, [isOpen, client.id]);
 
   const loadClientData = async () => {
@@ -185,7 +177,6 @@ const ClientDetailsModal: React.FC<{
   const handleMesuresSaved = () => {
     loadClientData();
     setShowMesuresModal(false);
-    // Afficher automatiquement la vue des mesures après sauvegarde
     setTimeout(() => {
       if (mesures.length > 0) {
         const latestMesure = mesures[mesures.length - 1];
@@ -204,16 +195,14 @@ const ClientDetailsModal: React.FC<{
     }
   };
 
+  const handleGenerateMesuresPDF = () => {
+    generateMesuresPDF(client, mesures);
+  };
+
   return (
     <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        title={`${client.prenom} ${client.nom}`}
-        maxWidth="max-w-2xl"
-      >
+      <Modal isOpen={isOpen} onClose={onClose} title={`${client.prenom} ${client.nom}`} maxWidth="max-w-2xl">
         <div className="space-y-6">
-          {/* Informations de contact */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-semibold text-gray-800 mb-3">Contact</h4>
             <div className="space-y-2 text-sm">
@@ -236,77 +225,60 @@ const ClientDetailsModal: React.FC<{
             </div>
           </div>
 
-          {/* Mesures */}
-<div>
-  <div className="flex items-center justify-between mb-3">
-    <h4 className="font-semibold text-gray-800">Mesures ({mesures.length})</h4>
-    <div className="flex space-x-2">
-      <Button
-        size="sm"
-        className="bg-green-600 hover:bg-green-700"
-        onClick={() => setShowMesuresModal(true)}
-      >
-        <Ruler size={16} className="mr-1" />
-        Prendre
-      </Button>
-
-      {mesures.length > 0 && (
-        <>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleGenerateMesuresPDF}
-          >
-            <FileText size={16} className="mr-1" />
-            PDF
-          </Button>
-
-          <Button
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => setShowMesuresModal(true)}
-          >
-            Nouvelle mesure
-          </Button>
-        </>
-      )}
-    </div>
-  </div>
-  
-  {mesures.length > 0 ? (
-    <div className="space-y-2">
-      {mesures.slice(-3).reverse().map((mesure, index) => (
-        <div
-          key={mesure.id}
-          onClick={() => handleViewMesures(mesure)}
-          className="flex justify-between items-center p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
-        >
           <div>
-            <span className="text-sm font-medium text-blue-800">
-              {mesure.dateCreation.toLocaleDateString('fr-FR')}
-            </span>
-            {index === 0 && (
-              <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">
-                Récente
-              </span>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-gray-800">Mesures ({mesures.length})</h4>
+              <div className="flex space-x-2">
+                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => setShowMesuresModal(true)}>
+                  <Ruler size={16} className="mr-1" />
+                  Prendre
+                </Button>
+                {mesures.length > 0 && (
+                  <>
+                    <Button size="sm" variant="secondary" onClick={handleGenerateMesuresPDF}>
+                      <FileText size={16} className="mr-1" />
+                      PDF
+                    </Button>
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowMesuresModal(true)}>
+                      Nouvelle mesure
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {mesures.length > 0 ? (
+              <div className="space-y-2">
+                {mesures.slice(-3).reverse().map((mesure, index) => (
+                  <div
+                    key={mesure.id}
+                    onClick={() => handleViewMesures(mesure)}
+                    className="flex justify-between items-center p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+                  >
+                    <div>
+                      <span className="text-sm font-medium text-blue-800">
+                        {new Date(mesure.dateCreation).toLocaleDateString('fr-FR')}
+                      </span>
+                      {index === 0 && (
+                        <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">
+                          Récente
+                        </span>
+                      )}
+                    </div>
+                    <FileText size={16} className="text-blue-600" />
+                  </div>
+                ))}
+                {mesures.length > 3 && (
+                  <p className="text-xs text-gray-500 text-center">
+                    et {mesures.length - 3} autre(s) mesure(s)...
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 italic">Aucune mesure enregistrée</p>
             )}
           </div>
-          <FileText size={16} className="text-blue-600" />
-        </div>
-      ))}
-      {mesures.length > 3 && (
-        <p className="text-xs text-gray-500 text-center">
-          et {mesures.length - 3} autre(s) mesure(s)...
-        </p>
-      )}
-    </div>
-  ) : (
-    <p className="text-sm text-gray-500 italic">Aucune mesure enregistrée</p>
-  )}
-</div>
 
-
-          {/* Commandes */}
           <div>
             <h4 className="font-semibold text-gray-800 mb-3">Historique Commandes ({commandes.length})</h4>
             {commandes.length > 0 ? (
@@ -316,7 +288,7 @@ const ClientDetailsModal: React.FC<{
                     <div>
                       <span className="text-sm font-medium">{commande.modele}</span>
                       <p className="text-xs text-gray-500">
-                        {commande.dateCommande.toLocaleDateString('fr-FR')}
+                        {new Date(commande.dateCommande).toLocaleDateString('fr-FR')}
                       </p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(commande.statut)}`}>
@@ -335,7 +307,6 @@ const ClientDetailsModal: React.FC<{
             )}
           </div>
 
-          {/* Notes */}
           {client.notes && (
             <div>
               <h4 className="font-semibold text-gray-800 mb-2">Notes</h4>
@@ -363,244 +334,5 @@ const ClientDetailsModal: React.FC<{
         />
       )}
     </>
-  );
-};
-
-// Modal nouveau client
-const NewClientModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-}> = ({ isOpen, onClose, onSuccess }) => {
-  const [formData, setFormData] = useState({
-    nom: '',
-    prenom: '',
-    telephone: '',
-    email: '',
-    adresse: '',
-    notes: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await db.clients.add({
-        id: Date.now().toString(),
-        ...formData,
-        dateCreation: new Date()
-      });
-
-      onSuccess();
-      onClose();
-      setFormData({
-        nom: '',
-        prenom: '',
-        telephone: '',
-        email: '',
-        adresse: '',
-        notes: ''
-      });
-    } catch (error) {
-      console.error('Erreur création client:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Nouveau Client"
-    >
-      <form onSubmit={handleSubmit}>
-        <FormField
-          label="Nom"
-          value={formData.nom}
-          onChange={(value) => setFormData(prev => ({ ...prev, nom: value as string }))}
-          required
-        />
-        
-        <FormField
-          label="Prénom"
-          value={formData.prenom}
-          onChange={(value) => setFormData(prev => ({ ...prev, prenom: value as string }))}
-          required
-        />
-        
-        <FormField
-          label="Téléphone"
-          type="tel"
-          value={formData.telephone}
-          onChange={(value) => setFormData(prev => ({ ...prev, telephone: value as string }))}
-          required
-        />
-        
-        <FormField
-          label="Email"
-          type="email"
-          value={formData.email}
-          onChange={(value) => setFormData(prev => ({ ...prev, email: value as string }))}
-        />
-        
-        <FormField
-          label="Adresse"
-          value={formData.adresse}
-          onChange={(value) => setFormData(prev => ({ ...prev, adresse: value as string }))}
-        />
-        
-        <FormField
-          label="Notes"
-          type="textarea"
-          value={formData.notes}
-          onChange={(value) => setFormData(prev => ({ ...prev, notes: value as string }))}
-        />
-
-        <div className="flex space-x-3 mt-6">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            fullWidth
-          >
-            Annuler
-          </Button>
-          <Button
-            type="submit"
-            fullWidth
-            disabled={isLoading || !formData.nom || !formData.prenom || !formData.telephone}
-          >
-            {isLoading ? 'Création...' : 'Créer'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-};
-
-// Modal prise de mesures
-const MesuresModal: React.FC<{
-  client: Client;
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
-}> = ({ client, isOpen, onClose, onSuccess }) => {
-  const [mesures, setMesures] = useState({
-    dos: 0,
-    longueurManche: 0,
-    tourManche: 0,
-    longueurRobe: 0,
-    jupe: 0,
-    pantalon: 0,
-    taille: 0,
-    poitrine: 0,
-    sousSein: 0,
-    encolure: 0,
-    carrure: 0,
-    hanches: 0,
-    genoux: 0,
-    ceinture: 0,
-    notes: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      await db.mesures.add({
-        id: Date.now().toString(),
-        clientId: client.id,
-        ...mesures,
-        dateCreation: new Date()
-      });
-
-      onSuccess();
-      onClose();
-    } catch (error) {
-      console.error('Erreur sauvegarde mesures:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  const mesuresFields = [
-    { key: 'dos', label: 'Dos (cm)' },
-    { key: 'longueurManche', label: 'Longueur manche (cm)' },
-    { key: 'tourManche', label: 'Tour de manche (cm)' },
-    { key: 'longueurRobe', label: 'Longueur robe (cm)' },
-    { key: 'jupe', label: 'Jupe (cm)' },
-    { key: 'pantalon', label: 'Pantalon (cm)' },
-    { key: 'taille', label: 'Taille (cm)' },
-    { key: 'poitrine', label: 'Poitrine (cm)' },
-    { key: 'sousSein', label: 'Sous-sein (cm)' },
-    { key: 'encolure', label: 'Encolure (cm)' },
-    { key: 'carrure', label: 'Carrure (cm)' },
-    { key: 'hanches', label: 'Hanches (cm)' },
-    { key: 'genoux', label: 'Genoux (cm)' },
-    { key: 'ceinture', label: 'Ceinture (cm)' }
-  ];
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`Mesures - ${client.prenom} ${client.nom}`}
-      maxWidth="max-w-lg"
-    >
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {mesuresFields.map(field => (
-            <FormField
-              key={field.key}
-              label={field.label}
-              type="number"
-              value={mesures[field.key as keyof typeof mesures] as number}
-              onChange={(value) => setMesures(prev => ({ 
-                ...prev, 
-                [field.key]: value as number 
-              }))}
-              className="text-sm"
-            />
-          ))}
-        </div>
-
-        <FormField
-          label="Notes"
-          type="textarea"
-          value={mesures.notes}
-          onChange={(value) => setMesures(prev => ({ 
-            ...prev, 
-            notes: value as string 
-          }))}
-        />
-
-        <div className="flex space-x-3 mt-6">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-            fullWidth
-          >
-            Annuler
-          </Button>
-          <Button
-            type="submit"
-            fullWidth
-            disabled={isLoading}
-          >
-            {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
   );
 };
