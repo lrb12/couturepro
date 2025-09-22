@@ -13,6 +13,8 @@ import { ActionsRapidesPage } from './pages/ActionsRapidesPage';
 import { isAuthenticated } from './services/auth';
 import { initializeDatabase } from './services/database';
 import { useSettings } from './hooks/useSettings';
+import { ErrorBoundary } from './components/utils/ErrorBoundary';
+
 
 // Composant pour les routes protégées
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
