@@ -237,62 +237,74 @@ const ClientDetailsModal: React.FC<{
           </div>
 
           {/* Mesures */}
+<div>
+  <div className="flex items-center justify-between mb-3">
+    <h4 className="font-semibold text-gray-800">Mesures ({mesures.length})</h4>
+    <div className="flex space-x-2">
+      <Button
+        size="sm"
+        className="bg-green-600 hover:bg-green-700"
+        onClick={() => setShowMesuresModal(true)}
+      >
+        <Ruler size={16} className="mr-1" />
+        Prendre
+      </Button>
+
+      {mesures.length > 0 && (
+        <>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleGenerateMesuresPDF}
+          >
+            <FileText size={16} className="mr-1" />
+            PDF
+          </Button>
+
+          <Button
+            size="sm"
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => setShowMesuresModal(true)}
+          >
+            Nouvelle mesure
+          </Button>
+        </>
+      )}
+    </div>
+  </div>
+  
+  {mesures.length > 0 ? (
+    <div className="space-y-2">
+      {mesures.slice(-3).reverse().map((mesure, index) => (
+        <div
+          key={mesure.id}
+          onClick={() => handleViewMesures(mesure)}
+          className="flex justify-between items-center p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+        >
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-gray-800">Mesures ({mesures.length})</h4>
-              <div className="flex space-x-2">
-                <Button
-                  size="sm"
-                className="bg-green-600 hover:bg-green-700"
-                  onClick={() => setShowMesuresModal(true)}
-                >
-                  <Ruler size={16} className="mr-1" />
-                  Prendre
-                </Button>
-                {mesures.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={handleGenerateMesuresPDF}
-                  >
-                    <FileText size={16} className="mr-1" />
-                    PDF
-                  </Button>
-                Nouvelle mesure
-              </div>
-            </div>
-            
-            {mesures.length > 0 ? (
-              <div className="space-y-2">
-                {mesures.slice(-3).reverse().map((mesure, index) => (
-                  <div
-                    key={mesure.id}
-                    onClick={() => handleViewMesures(mesure)}
-                    className="flex justify-between items-center p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
-                  >
-                    <div>
-                      <span className="text-sm font-medium text-blue-800">
-                        {mesure.dateCreation.toLocaleDateString('fr-FR')}
-                      </span>
-                      {index === 0 && (
-                        <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">
-                          Récente
-                        </span>
-                      )}
-                    </div>
-                    <FileText size={16} className="text-blue-600" />
-                  </div>
-                ))}
-                {mesures.length > 3 && (
-                  <p className="text-xs text-gray-500 text-center">
-                    et {mesures.length - 3} autre(s) mesure(s)...
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500 italic">Aucune mesure enregistrée</p>
+            <span className="text-sm font-medium text-blue-800">
+              {mesure.dateCreation.toLocaleDateString('fr-FR')}
+            </span>
+            {index === 0 && (
+              <span className="ml-2 text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">
+                Récente
+              </span>
             )}
           </div>
+          <FileText size={16} className="text-blue-600" />
+        </div>
+      ))}
+      {mesures.length > 3 && (
+        <p className="text-xs text-gray-500 text-center">
+          et {mesures.length - 3} autre(s) mesure(s)...
+        </p>
+      )}
+    </div>
+  ) : (
+    <p className="text-sm text-gray-500 italic">Aucune mesure enregistrée</p>
+  )}
+</div>
+
 
           {/* Commandes */}
           <div>
