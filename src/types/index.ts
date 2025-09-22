@@ -101,3 +101,14 @@ export interface DashboardStats {
   commandesEnRetard: number;
   paiementsEnAttente: number;
 }
+
+export interface Settings {
+  id: string;
+  atelierName: string;
+  logo?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

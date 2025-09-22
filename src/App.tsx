@@ -5,13 +5,14 @@ import { DashboardPage } from './pages/Dashboard';
 import { ClientsPage } from './pages/Clients';
 import { CommandesPage } from './pages/Commandes';
 import { AlertsPage } from './pages/Alerts';
-import { ProfilePage } from './pages/Profile';
+import { SettingsPage } from './pages/Settings';
 import { LoginPage } from './pages/Login';
 import { AdminPage } from './pages/AdminPage';
 import { NouveauPaiementPage } from './pages/paiements/NouveauPaiementPage';
 import { ActionsRapidesPage } from './pages/ActionsRapidesPage';
 import { isAuthenticated } from './services/auth';
 import { initializeDatabase } from './services/database';
+import { useSettings } from './hooks/useSettings';
 
 // Composant pour les routes protégées
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,6 +42,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // Layout principal avec navigation
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { settings } = useSettings();
+
+  // Appliquer le titre dynamique
+  useEffect(() => {
+    if (settings?.atelierName) {
+      document.title = `${settings.atelierName} - COUTUPRO`;
+    }
+  }, [settings]);
+
   return (
     <div className="min-h-screen bg-gray-50 pb-16">
       {children}
@@ -124,11 +134,11 @@ function App() {
           } 
         />
         <Route 
-          path="/profil" 
+          path="/parametres" 
           element={
             <ProtectedRoute>
               <MainLayout>
-                <ProfilePage />
+                <SettingsPage />
               </MainLayout>
             </ProtectedRoute>
           } 
