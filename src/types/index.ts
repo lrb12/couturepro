@@ -23,27 +23,23 @@ export interface Client {
   adresse?: string;
   dateCreation: Date;
   notes?: string;
+  photo?: string;
+}
+
+export interface MesureType {
+  id: string;
+  nom: string;
+  isDefault: boolean;
+  ordre: number;
 }
 
 export interface Mesure {
   id: string;
   clientId: string;
-  dos: number;
-  longueurManche: number;
-  tourManche: number;
-  longueurRobe: number;
-  jupe: number;
-  pantalon: number;
-  taille: number;
-  poitrine: number;
-  sousSein: number;
-  encolure: number;
-  carrure: number;
-  hanches: number;
-  genoux: number;
-  ceinture: number;
+  mesures: { [key: string]: number }; // nom de la mesure -> valeur
   dateCreation: Date;
   notes?: string;
+  version: number; // pour l'historique
 }
 
 export interface Commande {
@@ -54,21 +50,29 @@ export interface Commande {
   reference?: string;
   dateCommande: Date;
   dateLivraison: Date;
-  statut: 'En attente' | 'En cours' | 'Retouche' | 'Livrée';
+  statut: 'En attente' | 'En cours' | 'Retouche' | 'Livrée' | 'Annulée';
   montantTotal: number;
   acompte: number;
   reste: number;
   statutPaiement: 'Impayé' | 'Acompte' | 'Payé';
   notes?: string;
+  priorite: 'Basse' | 'Normale' | 'Haute' | 'Urgente';
+  couleur?: string;
+  tissu?: string;
+  doublure?: string;
+  accessoires?: string;
+  instructions?: string;
 }
 
 export interface Paiement {
   id: string;
   commandeId: string;
   montant: number;
-  type: 'Acompte' | 'Solde';
+  type: 'Acompte' | 'Solde' | 'Remboursement';
   datePaiement: Date;
-  methode: 'Espèces' | 'Carte' | 'Virement' | 'Mobile';
+  methode: 'Espèces' | 'Carte' | 'Virement' | 'Mobile' | 'Chèque';
+  reference?: string;
+  notes?: string;
 }
 
 export interface Retouche {
@@ -79,11 +83,12 @@ export interface Retouche {
   statut: 'En attente' | 'En cours' | 'Terminée';
   dateCreation: Date;
   notes?: string;
+  cout?: number;
 }
 
 export interface Alerte {
   id: string;
-  type: 'livraison' | 'paiement' | 'retouche';
+  type: 'livraison' | 'paiement' | 'retouche' | 'rappel';
   titre: string;
   message: string;
   priority: 'low' | 'medium' | 'high';
@@ -100,6 +105,8 @@ export interface DashboardStats {
   commandesEnCours: number;
   commandesEnRetard: number;
   paiementsEnAttente: number;
+  commandesDuMois: number;
+  revenusDuMois: number;
 }
 
 export interface Settings {
@@ -109,6 +116,21 @@ export interface Settings {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  adresse?: string;
+  telephone?: string;
+  email?: string;
+  siret?: string;
+  tva?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface RapportMensuel {
+  mois: string;
+  annee: number;
+  totalCommandes: number;
+  totalRevenus: number;
+  commandesLivrees: number;
+  commandesEnCours: number;
+  nouveauxClients: number;
 }
