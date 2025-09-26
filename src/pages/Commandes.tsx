@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Calendar, DollarSign, User, Package, Edit, Trash2, Eye, FileText, Clock, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Calendar, DollarSign, User, Package, CreditCard as Edit, Trash2, Eye, FileText, Clock, AlertTriangle } from 'lucide-react';
 import { Image as ImageIcon, Camera, Star, Flag } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';

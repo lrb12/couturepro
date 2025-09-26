@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, Phone, Mail, MapPin, Ruler, FileText, User, Camera, Edit, Trash2, Plus } from 'lucide-react';
+import { Search, UserPlus, Phone, Mail, MapPin, Ruler, FileText, User, Camera, CreditCard as Edit, Trash2, Plus } from 'lucide-react';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { Card } from '../components/ui/Card';
