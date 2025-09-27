@@ -3,9 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --primary-color: #1B7F4D;
-  --secondary-color: #3EBE72;
-  --accent-color: #0C3A24;
+  --primary-color: #0A3764;
+  --secondary-color: #1E5A8A;
+  --accent-color: #0F2A44;
+  --background-color: #0A3764;
+}
+
+/* Fond uniforme pour toute l'application */
+body {
+  background-color: var(--background-color) !important;
+}
+
+.min-h-screen {
+  background-color: var(--background-color) !important;
 }
 
 /* Styles personnalisés pour les couleurs dynamiques */
@@ -35,6 +45,10 @@
 
 .border-primary {
   border-color: var(--primary-color);
+}
+
+.bg-app {
+  background-color: var(--background-color);
 }
 
 /* Animations améliorées */
@@ -70,19 +84,32 @@
 
 /* Scrollbar personnalisée */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-color);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Styles pour les cartes sur fond bleu */
+.card-on-blue {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-on-blue:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }

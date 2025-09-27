@@ -3,26 +3,25 @@ import { User, AccessCode } from '../types';
 
 const MASTER_CODE = 'ADMIN2024';
 
-export const generateBrowserFingerprint = (): string => {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  ctx!.textBaseline = 'top';
-  ctx!.font = '14px Arial';
-  ctx!.fillText('Browser fingerprint', 2, 2);
-  
-  return btoa(JSON.stringify({
-    screen: `${screen.width}x${screen.height}`,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    language: navigator.language,
-    platform: navigator.platform,
-    canvas: canvas.toDataURL()
-  }));
+// Générer un identifiant unique basé sur le code d'accès plutôt que sur le navigateur
+export const generateUserSession = (code: string): string => {
+  return `session_${code}_${Date.now()}`;
 };
 
 export const isAuthenticated = async (): Promise<boolean> => {
   try {
-    const fingerprint = generateBrowserFingerprint();
-    const user = await db.users.where('browserFingerprint').equals(fingerprint).first();
+    // Vérifier s'il y a une session active dans localStorage
+    const sessionData = localStorage.getItem('coutupro_session');
+    if (!sessionData) return false;
+
+    const { code, sessionId } = JSON.parse(sessionData);
+    
+    // Vérifier que le code existe toujours et est utilisé
+    const accessCode = await db.accessCodes.where('code').equals(code).first();
+    if (!accessCode || !accessCode.isUsed) return false;
+
+    // Vérifier que la session existe
+    const user = await db.users.where('id').equals(sessionId).first();
     return !!user;
   } catch {
     return false;
@@ -31,30 +30,33 @@ export const isAuthenticated = async (): Promise<boolean> => {
 
 export const authenticateWithCode = async (code: string): Promise<boolean> => {
   try {
-    const fingerprint = generateBrowserFingerprint();
-    
-    // Vérifier si déjà authentifié
-    const existingUser = await db.users.where('browserFingerprint').equals(fingerprint).first();
-    if (existingUser) return true;
-
     // Vérifier le code
     const accessCode = await db.accessCodes.where('code').equals(code).first();
-    if (!accessCode || accessCode.isUsed) return false;
+    if (!accessCode) return false;
 
-    // Marquer le code comme utilisé
-    await db.accessCodes.update(accessCode.id, {
-      isUsed: true,
-      usedBy: fingerprint,
-      usedAt: new Date()
-    });
+    // Si le code n'est pas encore utilisé, le marquer comme utilisé
+    if (!accessCode.isUsed) {
+      await db.accessCodes.update(accessCode.id, {
+        isUsed: true,
+        usedAt: new Date()
+      });
+    }
 
-    // Créer l'utilisateur
+    // Créer une nouvelle session utilisateur
+    const sessionId = generateUserSession(code);
     await db.users.add({
-      id: Date.now().toString(),
+      id: sessionId,
       code,
       usedAt: new Date(),
-      browserFingerprint: fingerprint
+      browserFingerprint: 'multi_browser_session'
     });
+
+    // Sauvegarder la session dans localStorage
+    localStorage.setItem('coutupro_session', JSON.stringify({
+      code,
+      sessionId,
+      loginTime: new Date().toISOString()
+    }));
 
     return true;
   } catch (error) {
@@ -90,6 +92,14 @@ export const getAllAccessCodes = async (): Promise<AccessCode[]> => {
 };
 
 export const logout = async (): Promise<void> => {
-  const fingerprint = generateBrowserFingerprint();
-  await db.users.where('browserFingerprint').equals(fingerprint).delete();
+  try {
+    const sessionData = localStorage.getItem('coutupro_session');
+    if (sessionData) {
+      const { sessionId } = JSON.parse(sessionData);
+      await db.users.where('id').equals(sessionId).delete();
+    }
+    localStorage.removeItem('coutupro_session');
+  } catch (error) {
+    console.error('Erreur déconnexion:', error);
+  }
 };

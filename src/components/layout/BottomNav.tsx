@@ -16,7 +16,7 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-white/20 z-40">
       <div className="flex justify-around items-center py-2">
         {navItems.map(({ path, icon: Icon, label, badge }) => {
           const isActive = location.pathname === path;
@@ -26,13 +26,13 @@ export const BottomNav: React.FC = () => {
               to={path}
               className={`relative flex flex-col items-center py-2 px-3 min-w-0 flex-1 ${
                 isActive 
-                  ? 'text-green-600' 
-                  : 'text-gray-500 hover:text-green-600'
+                  ? 'text-blue-600' 
+                  : 'text-gray-500 hover:text-blue-600'
               } transition-colors duration-200`}
             >
               <Icon 
                 size={20} 
-                className={isActive ? 'text-green-600' : ''} 
+                className={isActive ? 'text-blue-600' : ''} 
               />
               <span className="text-xs mt-1 truncate">
                 {label}

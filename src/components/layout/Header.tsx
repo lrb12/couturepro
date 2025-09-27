@@ -14,8 +14,8 @@ export const Header: React.FC<HeaderProps> = ({
   const { settings } = useSettings();
 
   return (
-    <header className="bg-gradient-to-r from-green-700 to-green-600 text-white shadow-lg" style={{
-      background: settings ? `linear-gradient(to right, ${settings.accentColor}, ${settings.primaryColor})` : undefined
+    <header className="bg-gradient-to-r from-blue-800 to-blue-700 text-white shadow-lg" style={{
+      background: settings ? `linear-gradient(to right, ${settings.accentColor || '#0F2A44'}, ${settings.primaryColor || '#0A3764'})` : undefined
     }}>
       <div className="px-4 py-4">
         <div className="flex items-center justify-center">

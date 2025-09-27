@@ -4,15 +4,12 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
-  // Couleurs optionnelles pour CTA
-  bgColor?: string;
-  textColor?: string;
 }
 
-export const Card: React.FC<CardProps> = ({ children, className = '', onClick, bgColor = 'bg-white', textColor = 'text-black' }) => {
+export const Card: React.FC<CardProps> = ({ children, className = '', onClick }) => {
   return (
     <div
-      className={`${bgColor} ${textColor} rounded-xl shadow-lg p-4 ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`card-on-blue rounded-xl shadow-lg p-4 ${onClick ? 'cursor-pointer hover:shadow-xl transition-all duration-200' : ''} ${className}`}
       onClick={onClick}
     >
       {children}
